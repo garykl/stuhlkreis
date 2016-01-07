@@ -1,13 +1,28 @@
-module Main where
+module Logic where
+
+
 
 import System.Process (readProcess)
 import System.Environment (getArgs)
+import System.Random (randomIO)
 import Data.List (elemIndex)
 import Control.Monad (liftM)
 
 import Diagrams.Prelude hiding (Direction)
 import Diagrams.Animation
 import Diagrams.Backend.Cairo.CmdLine
+
+
+randomOrientation :: Int -> IO [Orientation]
+randomOrientation 0 = return []
+randomOrientation n = do
+    number <- randomIO :: IO Int
+    ll <- randomOrientation (n - 1)
+    return $ (case number `mod` 4 of
+        0 -> Inner
+        1 -> Outer
+        2 -> Clock
+        3 -> AntiClock) : ll
 
 
 readFilename :: IO (Maybe String)
@@ -43,25 +58,6 @@ ruleFromTextFile filename = do
     return . Rule $ (\o p ->
         let h = [n | [l, m, n] <- text, read l == o, read m == p]
         in  if null h then None else read $ head h)
-
-
-
-main :: IO ()
-main = do
-    putStrLn "Stuhlkreis"
-    -- maybeFilename <- readFilename
-    -- case maybeFilename of
-    --     Nothing -> print "Provide a filename!"
-    --     Just filename -> do
-    let stuhlkreis = [Inner, Outer, Inner, Clock, Clock, Clock, AntiClock, Outer]
-    -- let rule = Rule $ \o p -> if o == p then ToLeft else None
-    -- rule <- ruleFromPythonFile "tmp.py"
-    rule <- ruleFromPythonFile "tmp.py" -- filename
-    -- mainWith $ flip toAnimation 10
-    --          $ map stuhlkreisDiagram
-    --                (applyOften' 7 (applyRule rule) stuhlkreis)
-    mainWith $ stuhlkreisDiagramWithTime
-             $ (applyOften' 7 (applyRule rule) stuhlkreis)
 
 
 -- orientationColor :: Orientation -> Color
